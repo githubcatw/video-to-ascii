@@ -3,7 +3,7 @@
 import colorsys
 from xtermcolor import colorize
 
-CHARS_LIGHT = [' ', ' ', '.', ':', '!', '+', '*', 'e', '$', '@', '8']
+CHARS_LIGHT = [' ', ' ', '.', ':', '!', 't', '*', 'e', 'S', '@', '8']
 CHARS_COLOR = ['.', '*', 'e', 's', '◍']
 CHARS_FILLED = ['░', '▒', '▓', '█']
 
