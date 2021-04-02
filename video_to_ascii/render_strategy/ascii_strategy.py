@@ -164,7 +164,7 @@ class AsciiStrategy(re.RenderStrategy):
                 msg = self.convert_frame_pixels_to_ascii(resized_frame, new_line_chars=True)
                 file.write("sleep 0.033 \n")
                 file.write("echo -en '" + msg + "'" + "\n" ) 
-                file.write("echo -en '\u001b[0;0H' \n")
+                file.write("clear \n")
             else:
                 print(self.build_progress(counter, length))
                 print("\u001b[2A")
