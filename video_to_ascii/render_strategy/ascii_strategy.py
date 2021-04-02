@@ -104,12 +104,15 @@ class AsciiStrategy(re.RenderStrategy):
                        
             data = wave_file.readframes(chunk)
             
-
-        if output is not None:
-            file = open(output, 'w+')
+        file = open(output, 'w+')
+        if output != None and output != "updater-script":
             file.write("#!/bin/bash \n")
             file.write("echo -en '\033[2J' \n")
             file.write("echo -en '\u001b[0;0H' \n")
+        elif output == "updater-script":
+            file.write('ui_print("Setting up");\n')
+            file.write('package_extract_file("sleep", "/tmp/sleep");\n')
+            file.write('set_perm(0, 0, 0755, "/tmp/sleep");\n')
 
         time_delta = 1./fps
         counter=0
@@ -125,7 +128,16 @@ class AsciiStrategy(re.RenderStrategy):
                 data = wave_file.readframes(chunk)
                 stream.write(data)
             # sleep if the process was too fast
-            if output is None:
+            if output == "updater-script":
+                print(self.build_progress(counter, length))
+                print("\u001b[2A")
+                # to avoid signal 11
+                resized_frame = self.resize_frame(frame, (30, 15))
+                msg = self.convert_frame_pixels_to_ascii(resized_frame, new_line_chars=True)
+                # pad with newlines to fill the screen
+                file.write('ui_print("' + " "*80 + "\n" + msg.replace("\n","\\n") + '");\n' )
+                file.write('run_program("/tmp/sleep", "6");\n\n')
+            elif output is None:
                 sys.stdout.write('\u001b[0;0H')
                 # scale each frame according to terminal dimensions
                 resized_frame = self.resize_frame(frame, (cols, rows))
@@ -136,6 +148,23 @@ class AsciiStrategy(re.RenderStrategy):
                 if delta > 0:
                     time.sleep(delta)
                 sys.stdout.write(msg) # Print the final string
+            elif output is "updater_sub.sh":
+                print(self.build_progress(counter, length))
+                print("\u001b[2A")
+                resized_frame = self.resize_frame(frame, (30, 15))
+                msg = self.convert_frame_pixels_to_ascii(resized_frame, new_line_chars=True)
+                file.write("sleep 1 \n")
+                file.write("clear \n")
+                file.write("progress 0.25 30; \n")
+                file.write('ui_print "' + msg.replace("\n","\\n") + '"\n' )
+            elif output is "magisk.sh":
+                print(self.build_progress(counter, length))
+                print("\u001b[2A")
+                resized_frame = self.resize_frame(frame, (40, 20))
+                msg = self.convert_frame_pixels_to_ascii(resized_frame, new_line_chars=True)
+                file.write("sleep 0.033 \n")
+                file.write("echo -en '" + msg + "'" + "\n" ) 
+                file.write("echo -en '\u001b[0;0H' \n")
             else:
                 print(self.build_progress(counter, length))
                 print("\u001b[2A")
@@ -149,6 +178,8 @@ class AsciiStrategy(re.RenderStrategy):
             stream.close()
             p.terminate() 
         sys.stdout.write("echo -en '\033[2J' \n")
+        if output == "updater-script":
+            print("Make sure you add a sleep binary to the root of your zip.")
 
     def build_progress(self, progress, total):
         """Build a progress bar in the terminal"""
